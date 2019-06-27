@@ -104,8 +104,8 @@ void *threadMostra(){
   int socket_local = cria_socket_local();
   struct sockaddr_in endereco_destino = cria_endereco_destino(endereco, 7777);
   for(;;){
-	pthread_mutex_lock(&lock);
     delay(1);
+	pthread_mutex_lock(&lock);
     printf("Thread->Enviado: %s\n", msg_enviada);
     envia_mensagem(socket_local, endereco_destino, msg_enviada);
     nrec = recebe_mensagem(socket_local, msg_recebida, 1000);
@@ -129,10 +129,11 @@ void *threadAltera(){
   int socket_local = cria_socket_local();
   struct sockaddr_in endereco_destino = cria_endereco_destino(endereco, 7777);
   for(;;){
-	pthread_mutex_lock(&lock);
 	valor=rand() % 100;
 	sprintf( msg_enviada, "ani%lf", valor);
-    delay(2);
+    delay(1);
+	pthread_mutex_lock(&lock);
+
     printf("Thread->Enviado: %s\n", msg_enviada);
     envia_mensagem(socket_local, endereco_destino, msg_enviada);
     nrec = recebe_mensagem(socket_local, msg_recebida, 1000);
