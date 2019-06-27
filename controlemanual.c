@@ -21,6 +21,7 @@ Colocamos somente ele, pois com ele já demonstramos o funcionamento do código 
 
 #define FALHA 1
 
+pthread_mutex_t lock;
 
 void delay(int number_of_seconds){
   printf("\n");
@@ -92,28 +93,56 @@ int recebe_mensagem(int socket_local, char *buffer, int TAM_BUFFER)
 
 //Mostra o conteúdo -------------------------------------------------------------------------------------------------
 void *threadMostra(){
+	
   char msg_recebida[1000];
   char msg_enviada[1000];
   char endereco[1000];
   int nrec;
 
-  strcpy( msg_enviada, "sta0");
+  strcpy( msg_enviada, "sno0");
   strcpy( endereco, "localhost");
   int socket_local = cria_socket_local();
   struct sockaddr_in endereco_destino = cria_endereco_destino(endereco, 7777);
   for(;;){
+	pthread_mutex_lock(&lock);
     delay(1);
     printf("Thread->Enviado: %s\n", msg_enviada);
     envia_mensagem(socket_local, endereco_destino, msg_enviada);
     nrec = recebe_mensagem(socket_local, msg_recebida, 1000);
     msg_recebida[nrec] = '\0';
     printf("Mensagem de resposta com %d bytes >>>%s<<<\n", nrec, msg_recebida);
+	pthread_mutex_unlock(&lock);
   }
 
 
 }
 //FIM MOSTRA CONTEUDO -------------------------------------------------------------------------------------------------
+void *threadAltera(){
+  char msg_recebida[1000];
+  char msg_enviada[1000];
+  char endereco[1000];
+  int nrec;
+  float valor=rand() % 100;
 
+  sprintf( msg_enviada, "ani%lf", valor);
+  strcpy( endereco, "localhost");
+  int socket_local = cria_socket_local();
+  struct sockaddr_in endereco_destino = cria_endereco_destino(endereco, 7777);
+  for(;;){
+	pthread_mutex_lock(&lock);
+	valor=rand() % 100;
+	sprintf( msg_enviada, "ani%lf", valor);
+    delay(2);
+    printf("Thread->Enviado: %s\n", msg_enviada);
+    envia_mensagem(socket_local, endereco_destino, msg_enviada);
+    nrec = recebe_mensagem(socket_local, msg_recebida, 1000);
+    msg_recebida[nrec] = '\0';
+    printf("ALTERA...Mensagem de resposta com %d bytes >>>%s<<<\n", nrec, msg_recebida);
+	pthread_mutex_unlock(&lock);
+  }
+
+
+}
 int main(int argc, char *argv[])
 {
 	if (argc < 3) {
@@ -127,6 +156,8 @@ int main(int argc, char *argv[])
                                                 //INICIO- CRIA THREAD
   pthread_t t1;
   pthread_create(&t1,NULL,threadMostra,NULL);
+  pthread_t t2;
+  pthread_create(&t2,NULL,threadAltera,NULL);
                                                 //FIM - CRIA THREAD
 	int porta_destino = atoi( argv[2]);
 
@@ -195,4 +226,5 @@ int main(int argc, char *argv[])
 
 	} while( opcao != 'x' );
   pthread_join(t1,NULL);
+  pthread_join(t2,NULL);
 }
